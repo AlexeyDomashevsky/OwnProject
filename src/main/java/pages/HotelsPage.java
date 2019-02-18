@@ -4,44 +4,30 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import services.PropertyReader;
+
+import java.util.List;
 
 public class HotelsPage extends BasePage {
 
-    private static final String PRICE_ELEMENT = "//div[@class='room_details ']//b";
-    private static final String BEGIN_LOCATOR_CHOOSE_CURRENCY_TYPE = "//ul[@class='currency_list']//span[contains(text(),'";
-    private static final String END_LOCATOR_PART_CHOOSE_CURRENCY_TYPE = "')]";
+    public static final String REQUIRED_REVIEW_SCORE="hotel.review.score";
 
-    @FindBy(xpath = "//li[@data-id='currency_selector']")
-    private WebElement currencyTypeSelector;
+//TODO Will complete
+    @FindBy(xpath = "//div[@class='bui-review-score c-score bui-review-score--end']//div[@class='bui-review-score__badge']")
+    private List<WebElement> hotelsReviewScore;
 
-    @FindBy(xpath = "//div[@data-block-id='heading']//h2")
-    private WebElement foundProperties;
-
-    public HotelsPage(WebDriver webDriver) {
-        super(webDriver);
+    public HotelsPage(WebDriver driver) {
+        super(driver);
     }
 
-    public String findPrice() {
-        WebDriverWait webDriverWait = new WebDriverWait(webDriver, WAIT_TIME);
-        webDriverWait.until(ExpectedConditions.
-                presenceOfElementLocated(By.xpath(PRICE_ELEMENT)));
-        return webDriver.findElement(By.xpath(PRICE_ELEMENT)).getText();
+    public long findRequiredReviewScore(){
+//        List<WebElement> hotelList = driver.findElements(By.xpath("//div[@class='bui-review-score c-score bui-review-score--end']/div[contains(text(),"
+//                + PropertyReader.getProperty(REQUIRED_REVIEW_SCORE) +")]"));
+        return hotelsReviewScore.stream().filter(element -> element.getText().contains(PropertyReader.getProperty(REQUIRED_REVIEW_SCORE))).count();
     }
 
-    public HotelsPage changeCurrency(String currencyType) {
-        By locator = By.xpath(BEGIN_LOCATOR_CHOOSE_CURRENCY_TYPE +
-                currencyType + END_LOCATOR_PART_CHOOSE_CURRENCY_TYPE);
-        currencyTypeSelector.click();
-        WebDriverWait webDriverWait = new WebDriverWait(webDriver, WAIT_TIME);
-        webDriverWait.until(ExpectedConditions.presenceOfElementLocated(locator));
-        webDriver.findElement(locator).click();
-        return PageFactory.initElements(webDriver, HotelsPage.class);
-    }
 
-    public String findExistProperties() {
-        return foundProperties.getText();
-    }
+//    private double parseStringToDouble(String str){
+//        return Double.parseDouble(str);
+//    }
 }

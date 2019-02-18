@@ -4,12 +4,12 @@ import java.util.ResourceBundle;
 
 public class PropertyReader {
 
-    private static ResourceBundle resourceBundle = ResourceBundle.getBundle(System.getProperty("propFile"));
+    public static ResourceBundle resourceBundle = ResourceBundle.getBundle("config");
 
-    private PropertyReader() {
+    public PropertyReader() {
     }
 
-    public static String getProperty(String propertyName) {
+    public static String getProperty(String propertyName){
         return resourceBundle.getString(propertyName);
     }
 }

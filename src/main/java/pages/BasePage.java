@@ -1,59 +1,47 @@
 package pages;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import services.PropertyReader;
-import util.CustomLogger;
-import util.Waiters;
+import utils.Waiters;
 
 public class BasePage {
 
-    protected static final int WAIT_TIME = 5000;
-    protected static final String DEFAULT_LANGUAGE = "required.language";
-    protected static final String NAME_PLACE = "name.place";
-    protected static final String FLIGHTS_LINK = "link.flights";
-    protected static final String CAR_HIRE_LINK = "link.car.hire";
-    protected static final String AIRPORT_TAXI_LINK = "link.airport.taxi";
-    protected static final String SPACE = " ";
-    protected WebDriver webDriver;
+    private static final String DEFAULT_LANGUAGE = "required.language";
     protected Waiters waiters;
+    protected WebDriver driver;
+    protected Logger pageLogger = LogManager.getLogger(this);
 
     @FindBy(xpath = "//li[@data-id='language_selector']")
     private WebElement changeLanguageSelector;
 
-    public BasePage(WebDriver webDriver) {
-        this.webDriver = webDriver;
-        PageFactory.initElements(webDriver, this);
-        waiters = new Waiters(webDriver);
+    @FindBy(xpath = "//a[@aria-selected='true']//span[@class='seldescription']")
+    private WebElement selectedLanguage;
+
+    public BasePage(WebDriver driver) {
+        this.driver = driver;
+        PageFactory.initElements(driver, this);
+        waiters = new Waiters();
     }
 
     public void clickLanguageButton() {
+        waiters.sleep(0);
+        pageLogger.info("after wait");
         changeLanguageSelector.click();
-    }
-
-    public MainPage goToBookingCom() {
-        clickLanguageButton();
-        changeLanguage();
-        waiters.waitForPageLoaded();
-        return PageFactory.initElements(this.webDriver, MainPage.class);
+        pageLogger.info("changeLanguageSelector.click()");
     }
 
     public void changeLanguage() {
-        CustomLogger.logIntoConsoleInfo("Choose English (US) language");
-        webDriver.findElement(By.xpath("//span[contains(text(), '" + PropertyReader.getProperty(DEFAULT_LANGUAGE) + "')]")).click();
+        driver.findElement(By.xpath("//span[contains(text(), '" + PropertyReader.getProperty(DEFAULT_LANGUAGE) + "')]")).click();
     }
 
-    public boolean isLanguageChanged(String language) {
-        CustomLogger.logIntoConsoleInfo("Wait for 'Switch language' button to be present");
-        WebDriverWait webDriverWait = new WebDriverWait(webDriver, WAIT_TIME);
-        webDriverWait.until(ExpectedConditions.elementToBeClickable(changeLanguageSelector));
-        clickLanguageButton();
-        return !webDriver.findElements(By.xpath("//span[contains(text(), '" + language + "')]")).isEmpty();
+    public String getUsedLanguage() {
+        changeLanguageSelector.click();
+        return selectedLanguage.getText();
     }
-
 }

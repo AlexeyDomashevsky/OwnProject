@@ -6,90 +6,84 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import services.PropertyReader;
-import util.CustomLogger;
 
-import java.util.ArrayList;
+public class MainPage extends BasePage{
 
-public class MainPage extends BasePage {
+    private static final String DESTINATION = "destination.place.name";
+    private static final String CHECK_IN_MONTH = "check.in..month";
+    private static final String CHECK_IN_DAY = "check.in.day";
+    private static final String CHECK_OUT_MONTH = "check.out.month";
+    private static final String CHECK_OUT_DAY = "check.out.day";
 
-    @FindBy(xpath = "//input[@id='ss']")
-    private WebElement fieldInputNamePlace;
+    @FindBy(xpath = "//input[@id='ss']" )
+    private WebElement fieldInputDestination;
 
-    @FindBy(xpath = "//div[@data-component='search/group/group-with-modal']")
-    private WebElement chooseNumberOfGuests;
+    @FindBy(xpath = "//div[@class='xp__dates xp__group']")
+    private WebElement fieldInputDate;
 
-    @FindBy(xpath = "//div[@class ='xp__button']//button[@data-sb-id='main']")
-    private WebElement submitButton;
+    @FindBy(xpath = "//div[@class='bui-calendar__month']")
+    private WebElement monthName;
 
-    public MainPage(WebDriver webDriver) {
-        super(webDriver);
+    @FindBy(xpath = "//div[@data-bui-ref='calendar-next']")
+    private WebElement nextMonthButton;
+
+    @FindBy(xpath = "//div[contains(text(),'March')]/following-sibling::*//td[contains(text(),'15')]")
+    private WebElement dayOfMonth;
+
+    @FindBy(xpath = "//label[@id='xp__guests__toggle']")
+    private WebElement guestsInputField;
+
+    @FindBy(xpath = "//button[@class='sb-searchbox__button  ']")
+    private WebElement searchButton;
+
+    public MainPage(WebDriver driver) {
+        super(driver);
     }
 
-    public MainPage fillPlaceNameField() {
-        this.fieldInputNamePlace.clear();
-        this.fieldInputNamePlace.sendKeys(PropertyReader.getProperty(NAME_PLACE));
+    public MainPage fillFieldDestination(){
+        fieldInputDestination.click();
+        fieldInputDestination.sendKeys(PropertyReader.getProperty(DESTINATION));
+        pageLogger.info("fieldInputDestination.sendKeys("+PropertyReader.getProperty(DESTINATION)+")");
         return this;
     }
 
-    public HotelsPage submit() {
-        CustomLogger.logIntoConsoleInfo("Click 'Search' button");
-        submitButton.click();
-        waiters.waitForPageLoaded();
-        CustomLogger.logIntoConsoleInfo("Check if language switched and not dropped");
-        if (isLanguageChanged(PropertyReader.getProperty(DEFAULT_LANGUAGE))) {
-            changeLanguage();
-        } else {
-            clickLanguageButton();
+    public MainPage fillFieldRequiredDate(){
+        fieldInputDate.click();
+        findRequiredMonth(PropertyReader.getProperty(CHECK_IN_MONTH));
+        setRequiredDay(PropertyReader.getProperty(CHECK_IN_MONTH),PropertyReader.getProperty(CHECK_IN_DAY));
+        waiters.sleep(3000);
+        findRequiredMonth(PropertyReader.getProperty(CHECK_OUT_MONTH));
+        setRequiredDay(PropertyReader.getProperty(CHECK_OUT_MONTH),PropertyReader.getProperty(CHECK_OUT_DAY));
+        waiters.sleep(3000);
+        return this;
+    }
+
+    public HotelsPage clickSearchButton(){
+        searchButton.click();
+        return PageFactory.initElements(driver,HotelsPage.class);
+    }
+
+    private void findRequiredMonth(String month){
+        while (!findMonth(month)){
+            nextMonthButton.click();
         }
-        return PageFactory.initElements(webDriver, HotelsPage.class);
     }
 
-    public NumberOfGuestsPage clickFieldChooseGuest() {
-        chooseNumberOfGuests.click();
-        return PageFactory.initElements(webDriver, NumberOfGuestsPage.class);
+    private boolean findMonth(String month){
+        pageLogger.info(month);
+        pageLogger.info(month.contains(monthName.getText()));
+        return monthName.getText().contains(month);
+    }
+    private void setRequiredDay(String month, String day){
+        driver.findElement(By.xpath("//div[contains(text(),'"+month+
+                "')]/following-sibling::*//td[contains(text(),'"+day+"')]")).click();
     }
 
-    public CalendarAccommodationPage openCalendar() {
-        return PageFactory.initElements(webDriver, CalendarAccommodationPage.class);
+
+    public ChooseNumberOfRoomsAndGuestsPage clickOnGuestInputField (){
+        guestsInputField.click();
+        pageLogger.info(" guestsInputField.click()");
+        return new ChooseNumberOfRoomsAndGuestsPage(driver);
     }
 
-    /**
-     * Page sometimes doesn't load at all, and waiters can't handle this behaviour
-     */
-    public FlightsPage clickFlightLink() {
-        CustomLogger.logIntoConsoleInfo("Wait for ' " + PropertyReader.getProperty(FLIGHTS_LINK) + " ' link to be present");
-        waiters.waitForElementPresent(By.xpath("//span[contains(text(), '" + PropertyReader.getProperty(FLIGHTS_LINK) + "')]"));
-        webDriver.findElement(By.xpath("//span[contains(text(), '" + PropertyReader.getProperty(FLIGHTS_LINK) + "')]")).click();
-        CustomLogger.logIntoConsoleError("Switch to next tab");
-        ArrayList<String> tabs = new ArrayList(webDriver.getWindowHandles());
-        webDriver.switchTo().window(tabs.get(tabs.size() - 1));
-        waiters.sleep();
-//        if(!((JavascriptExecutor) webDriver).executeScript("return document.readyState").toString().equals("complete")){
-        CustomLogger.logIntoConsoleInfo("Refresh page");
-        webDriver.navigate().refresh();
-//        }
-        return PageFactory.initElements(webDriver, FlightsPage.class);
-    }
-
-    public CarsBookingPage clickCarHireLink() {
-        CustomLogger.logIntoConsoleInfo("Wait for ' " + PropertyReader.getProperty(CAR_HIRE_LINK) + " ' link to be present");
-        waiters.waitForElementPresent(By.xpath("//span[contains(text(), '" + PropertyReader.getProperty(CAR_HIRE_LINK) + "')]"));
-        webDriver.findElement(By.xpath("//span[contains(text(), '" + PropertyReader.getProperty(CAR_HIRE_LINK) + "')]")).click();
-        CustomLogger.logIntoConsoleError("Switch to next tab");
-        ArrayList<String> tabs = new ArrayList(webDriver.getWindowHandles());
-        webDriver.switchTo().window(tabs.get(tabs.size() - 1));
-        waiters.waitForPageLoaded();
-        return PageFactory.initElements(webDriver, CarsBookingPage.class);
-    }
-
-    public AirportTaxisPage clickAirportTaxisLink() {
-        CustomLogger.logIntoConsoleInfo("Wait for ' " + PropertyReader.getProperty(AIRPORT_TAXI_LINK) + " ' link to be present");
-        waiters.waitForElementPresent(By.xpath("//span[contains(text(), '" + PropertyReader.getProperty(AIRPORT_TAXI_LINK) + "')]"));
-        webDriver.findElement(By.xpath("//span[contains(text(), '" + PropertyReader.getProperty(AIRPORT_TAXI_LINK) + "')]")).click();
-        CustomLogger.logIntoConsoleError("Switch to next tab");
-        ArrayList<String> tabs = new ArrayList(webDriver.getWindowHandles());
-        webDriver.switchTo().window(tabs.get(tabs.size() - 1));
-        waiters.waitForPageLoaded();
-        return PageFactory.initElements(webDriver, AirportTaxisPage.class);
-    }
 }
